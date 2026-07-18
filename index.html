@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MA‘JO Bowls Nährwert Generator</title>
+  <style>
+    :root {
+      --bg: #18491C;
+      --panel: rgba(255,255,255,0.08);
+      --panel-2: rgba(255,255,255,0.05);
+      --line: rgba(255,255,255,0.16);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.82);
+      --radius: 18px;
+      --danger: #b54a4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+    }
+    .subtitle {
+      margin: 0 auto;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .category {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+    .category + .category {
+      margin-top: 14px;
+    }
+    .category h2 {
+      margin: 0;
+      padding: 14px 16px;
+      font-size: 1.05rem;
+      background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid var(--line);
+    }
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+      padding: 12px;
+    }
+    .item-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .item-check {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: #ffffff;
+    }
+    .item-name {
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+    .portion-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .portion-label, .item-meta, .footnote, .muted, .empty {
+      color: var(--muted);
+    }
+    .portion-select, .action-btn {
+      min-width: 96px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #113314;
+      color: #ffffff;
+    }
+    .item-meta {
+      font-size: 0.85rem;
+    }
+    .sidebar h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+    }
+    .selected-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 24px;
+      margin-bottom: 10px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    .chip button {
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .results {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0 14px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--panel-2);
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .action-btn {
+      cursor: pointer;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+    }
+    .action-btn.reset {
+      background: rgba(181,74,74,0.18);
+    }
+    .footnote {
+      margin-top: 26px;
+      text-align: center;
+      font-size: 0.86rem;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .items-grid, .results { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>MA‘JO Bowls Nährwert Generator</h1>
+      <p class="subtitle">Bestell dir deine leckere und individuelle Poké Bowl by www.majobowls.de 😋🌺</p>
+    </section>
+
+    <section class="layout">
+      <section class="panel">
+        <div id="categories"></div>
+      </section>
+
+      <aside class="panel sidebar">
+        <h2>Deine Auswahl</h2>
+        <div id="selectedList" class="selected-list"></div>
+        <div id="emptyState" class="empty">Noch nichts ausgewählt.</div>
+
+        <h2>Gesamte Nährwerte</h2>
+        <div class="results" id="results"></div>
+
+        <div class="action-row">
+          <button type="button" class="action-btn" id="calcBtn">Nährwerte berechnen</button>
+          <button type="button" class="action-btn reset" id="resetBtn">Reset</button>
+        </div>
+      </aside>
+    </section>
+
+    <p class="footnote">*Es handelt sich bei den angegebenen Werten um die Durchschnittswerte. Die Produkte und Rezepturen werden regelmäßig aktualisiert. Irrtümer und Anzeigefehler sind vorbehalten.</p>
+  </main>
+
+  <script>
+    const DATA = {"Grundlagen": [{"name": "Reis", "kcal": "353", "protein": "7", "carbs": "79", "sugar": "0,36", "fat": "1", "sat": "0,3", "fiber": "0", "salt": "1"}, {"name": "Süßkartoffeln", "kcal": "140", "protein": "2,6", "carbs": "28,6", "sugar": "8,4", "fat": "0,4", "sat": "0,2", "fiber": "0", "salt": "0,2"}, {"name": "Quinoa", "kcal": "231,6", "protein": "9,8", "carbs": "38,6", "sugar": "1", "fat": "3,3", "sat": "0,3", "fiber": "4,4", "salt": "0"}, {"name": "Salat", "kcal": "10", "protein": "1", "carbs": "1", "sugar": "0", "fat": "0,16", "sat": "0", "fiber": "1", "salt": "0"}], "Saucen": [{"name": "Erdnuss", "kcal": "125,8", "protein": "3,3", "carbs": "3,8", "sugar": "2,5", "fat": "11", "sat": "6,6", "fiber": "1", "salt": "0,6"}, {"name": "Tomaten Honig Senf", "kcal": "28,9", "protein": "0,7", "carbs": "5,2", "sugar": "5", "fat": "0,3", "sat": "0,1", "fiber": "0", "salt": "0,2"}, {"name": "Mango", "kcal": "48,7", "protein": "1", "carbs": "9,7", "sugar": "8,6", "fat": "0,6", "sat": "0,5", "fiber": "0", "salt": "0,1"}, {"name": "Curry", "kcal": "75,6", "protein": "0,5", "carbs": "2", "sugar": "1,3", "fat": "7,4", "sat": "6,9", "fiber": "0", "salt": "0,7"}, {"name": "Soja", "kcal": "42,8", "protein": "3,9", "carbs": "6,7", "sugar": "4,5", "fat": "0", "sat": "0", "fiber": "0", "salt": "7,2"}, {"name": "Parmesan", "kcal": "74,6", "protein": "3,4", "carbs": "1,3", "sugar": "1,3", "fat": "6,2", "sat": "4,2", "fiber": "0", "salt": "0,4"}, {"name": "Chipotle", "kcal": "59,1", "protein": "1,3", "carbs": "5,1", "sugar": "4,9", "fat": "3,6", "sat": "2,5", "fiber": "0,1", "salt": "0,4"}, {"name": "Sweet Chili", "kcal": "40", "protein": "0,5", "carbs": "8,6", "sugar": "8,5", "fat": "0,2", "sat": "0,1", "fiber": "0", "salt": "0,3"}, {"name": "Mayo Knoblauch", "kcal": "227", "protein": "2,3", "carbs": "0,2", "sugar": "0,2", "fat": "24,2", "sat": "3", "fiber": "0", "salt": "0,1"}, {"name": "Sriracha Mayo", "kcal": "233,2", "protein": "2,5", "carbs": "1,4", "sugar": "1,2", "fat": "24,2", "sat": "3", "fiber": "0", "salt": "0,4"}, {"name": "Joghurt Kräuter", "kcal": "39", "protein": "1,9", "carbs": "1,1", "sugar": "0,3", "fat": "2,8", "sat": "0,4", "fiber": "0,1", "salt": "0,1"}], "Zutaten": [{"name": "Zucchini", "kcal": "8", "protein": "1", "carbs": "1", "sugar": "1", "fat": "0,1", "sat": "0", "fiber": "0,4", "salt": "0"}, {"name": "rote Bete", "kcal": "26", "protein": "1", "carbs": "5", "sugar": "5", "fat": "0,1", "sat": "0", "fiber": "2", "salt": "0,1"}, {"name": "Rotkohl", "kcal": "12", "protein": "1", "carbs": "2", "sugar": "2", "fat": "0,1", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Karotten", "kcal": "17", "protein": "0,4", "carbs": "3", "sugar": "3", "fat": "0,1", "sat": "0", "fiber": "2", "salt": "0"}, {"name": "Kichererbsen", "kcal": "96,8", "protein": "5,8", "carbs": "11,2", "sugar": "0", "fat": "2", "sat": "0,2", "fiber": "4", "salt": "1"}, {"name": "Edamame", "kcal": "48,4", "protein": "4,4", "carbs": "0,5", "sugar": "0,5", "fat": "2,8", "sat": "0,4", "fiber": "1,5", "salt": "0,3"}, {"name": "Brokkoli", "kcal": "12", "protein": "2", "carbs": "1", "sugar": "1", "fat": "0,1", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Mango", "kcal": "25", "protein": "0,3", "carbs": "5", "sugar": "5", "fat": "0,2", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Mais", "kcal": "61", "protein": "2", "carbs": "10", "sugar": "1", "fat": "1", "sat": "0", "fiber": "2", "salt": "1"}, {"name": "Paprika", "kcal": "15", "protein": "1", "carbs": "3", "sugar": "3", "fat": "0,2", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Gurke", "kcal": "10", "protein": "0,5", "carbs": "1", "sugar": "1", "fat": "0,16", "sat": "0", "fiber": "0,4", "salt": "0"}, {"name": "Tomaten", "kcal": "14", "protein": "1", "carbs": "2", "sugar": "2", "fat": "0,16", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Frischkäse", "kcal": "96,4", "protein": "2,2", "carbs": "1,2", "sugar": "1,2", "fat": "9,2", "sat": "6", "fiber": "0", "salt": "0,4"}, {"name": "Kidneybohnen", "kcal": "88,8", "protein": "6,3", "carbs": "12", "sugar": "1,4", "fat": "0,5", "sat": "0", "fiber": "4", "salt": "0,5"}, {"name": "Avocado", "kcal": "78", "protein": "1", "carbs": "2", "sugar": "1", "fat": "8", "sat": "1,5", "fiber": "2", "salt": "0"}], "Proteinquellen": [{"name": "Thunfisch roh", "kcal": "62", "protein": "10", "carbs": "0", "sugar": "0", "fat": "2", "sat": "0,7", "fiber": "0", "salt": "0,1"}, {"name": "Thunfisch in Öl", "kcal": "84,6", "protein": "11,4", "carbs": "0", "sugar": "0", "fat": "4,3", "sat": "0,6", "fiber": "0", "salt": "0,4"}, {"name": "Lachs roh", "kcal": "81", "protein": "9", "carbs": "0", "sugar": "0", "fat": "5", "sat": "1", "fiber": "0", "salt": "0,1"}, {"name": "Lachs geräuchert", "kcal": "70,5", "protein": "8,8", "carbs": "0", "sugar": "0", "fat": "4", "sat": "0,6", "fiber": "0", "salt": "1,5"}, {"name": "Feta", "kcal": "139,2", "protein": "9,6", "carbs": "0", "sugar": "0", "fat": "11,2", "sat": "7,6", "fiber": "0", "salt": "0,7"}, {"name": "crunchy Chicken", "kcal": "96,5", "protein": "18,4", "carbs": "2,1", "sugar": "0,1", "fat": "1,5", "sat": "0,5", "fiber": "0", "salt": "0,1"}, {"name": "fried Chicken", "kcal": "83", "protein": "17,8", "carbs": "0", "sugar": "0", "fat": "1,3", "sat": "0,4", "fiber": "0", "salt": "0,1"}, {"name": "Falafel", "kcal": "206", "protein": "6,3", "carbs": "19,3", "sugar": "3,8", "fat": "10,1", "sat": "3,3", "fiber": "6,2", "salt": "1"}, {"name": "Tofu (geräuchert)", "kcal": "74", "protein": "8,3", "carbs": "0,5", "sugar": "0,2", "fat": "4,2", "sat": "0,7", "fiber": "0", "salt": "0,5"}, {"name": "Burrata", "kcal": "343,7", "protein": "15", "carbs": "1,6", "sugar": "1,5", "fat": "35", "sat": "22,5", "fiber": "0", "salt": "0,3"}, {"name": "Garnelen", "kcal": "43", "protein": "10,3", "carbs": "0", "sugar": "0", "fat": "0,2", "sat": "0", "fiber": "0", "salt": "0,1"}, {"name": "Ei", "kcal": "92", "protein": "7,8", "carbs": "0,4", "sugar": "0,3", "fat": "6,6", "sat": "2", "fiber": "0", "salt": "0,1"}], "Toppings": [{"name": "Röstzwiebeln", "kcal": "59", "protein": "0,6", "carbs": "4", "sugar": "0,9", "fat": "4,4", "sat": "2,1", "fiber": "0", "salt": "0,1"}, {"name": "rote Zwiebeln", "kcal": "11", "protein": "0,5", "carbs": "2", "sugar": "2", "fat": "0,1", "sat": "0", "fiber": "1", "salt": "0"}, {"name": "Cashewnüsse", "kcal": "88,3", "protein": "3", "carbs": "3,6", "sugar": "1,1", "fat": "6,7", "sat": "1,3", "fiber": "0", "salt": "0"}, {"name": "Tortilla Chips", "kcal": "70,1", "protein": "1", "carbs": "9,7", "sugar": "0,2", "fat": "3", "sat": "1,3", "fiber": "0", "salt": "0,1"}, {"name": "Erdnüsse", "kcal": "91,5", "protein": "3", "carbs": "2,7", "sugar": "0,7", "fat": "7,3", "sat": "0,5", "fiber": "0", "salt": "0,3"}, {"name": "Granatapfelkerne", "kcal": "12", "protein": "0,1", "carbs": "3", "sugar": "3", "fat": "0,1", "sat": "0", "fiber": "0,3", "salt": "0"}], "Samen & Gewürze": [{"name": "Sesam", "kcal": "17", "protein": "1", "carbs": "0,3", "sugar": "0", "fat": "2", "sat": "0", "fiber": "0,3", "salt": "0"}, {"name": "Lauchzwiebeln", "kcal": "13", "protein": "0,3", "carbs": "3", "sugar": "2", "fat": "0,1", "sat": "0", "fiber": "1", "salt": "0"}]};
+    const METRICS = [
+      ["kcal", "Kalorien", "kcal"],
+      ["fat", "Fett", "g"],
+      ["sat", "ges. Fettsäuren", "g"],
+      ["protein", "Proteine", "g"],
+      ["carbs", "Kohlenhydrate", "g"],
+      ["sugar", "Zucker", "g"],
+      ["fiber", "Ballaststoffe", "g"],
+      ["salt", "Salz", "g"]
+    ];
+
+    const formatter = new Intl.NumberFormat("de-DE", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+
+    function toNumber(value) {
+      if (value === null || value === undefined || value === "") return 0;
+      const normalized = String(value).trim().replace(/\./g, "").replace(",", ".");
+      const num = Number(normalized);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function formatDE(value) {
+      return formatter.format(Math.round((value + Number.EPSILON) * 100) / 100);
+    }
+
+    function makeKey(category, name) {
+      return category + "__" + name;
+    }
+
+    function renderCategories() {
+      const root = document.getElementById("categories");
+      root.innerHTML = "";
+
+      Object.entries(DATA).forEach(([category, items]) => {
+        const section = document.createElement("section");
+        section.className = "category";
+
+        const title = document.createElement("h2");
+        title.textContent = category;
+        section.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "items-grid";
+
+        items.forEach((item) => {
+          const key = makeKey(category, item.name);
+
+          const card = document.createElement("div");
+          card.className = "item-card";
+
+          const row1 = document.createElement("label");
+          row1.className = "check-row";
+
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.className = "item-check";
+          check.dataset.key = key;
+
+          const name = document.createElement("span");
+          name.className = "item-name";
+          name.textContent = item.name;
+
+          row1.appendChild(check);
+          row1.appendChild(name);
+
+          const row2 = document.createElement("div");
+          row2.className = "portion-row";
+
+          const portionLabel = document.createElement("span");
+          portionLabel.className = "portion-label";
+          portionLabel.textContent = "Portionsmenge";
+
+          const portion = document.createElement("select");
+          portion.className = "portion-select";
+          portion.dataset.key = key;
+          [1,2,3,4].forEach((num) => {
+            const option = document.createElement("option");
+            option.value = String(num);
+            option.textContent = num + "x";
+            portion.appendChild(option);
+          });
+
+          row2.appendChild(portionLabel);
+          row2.appendChild(portion);
+
+          const meta = document.createElement("div");
+          meta.className = "item-meta";
+          meta.textContent = item.kcal + " kcal pro Portion";
+
+          card.appendChild(row1);
+          card.appendChild(row2);
+          card.appendChild(meta);
+          grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        root.appendChild(section);
+      });
+    }
+
+    function buildLookup() {
+      const lookup = {};
+      Object.entries(DATA).forEach(([category, items]) => {
+        items.forEach((item) => {
+          lookup[makeKey(category, item.name)] = item;
+        });
+      });
+      return lookup;
+    }
+
+    const LOOKUP = buildLookup();
+
+    function calculateTotals() {
+      const totals = {
+        kcal: 0, fat: 0, sat: 0, protein: 0, carbs: 0, sugar: 0, fiber: 0, salt: 0
+      };
+
+      const selectedList = document.getElementById("selectedList");
+      const emptyState = document.getElementById("emptyState");
+      selectedList.innerHTML = "";
+      let count = 0;
+
+      document.querySelectorAll(".item-check").forEach((checkbox) => {
+        if (!checkbox.checked) return;
+
+        const key = checkbox.dataset.key;
+        const item = LOOKUP[key];
+        const portionSelect = document.querySelector('.portion-select[data-key="' + CSS.escape(key) + '"]');
+        const portion = portionSelect ? Number(portionSelect.value) : 1;
+
+        count += 1;
+        totals.kcal += toNumber(item.kcal) * portion;
+        totals.fat += toNumber(item.fat) * portion;
+        totals.sat += toNumber(item.sat) * portion;
+        totals.protein += toNumber(item.protein) * portion;
+        totals.carbs += toNumber(item.carbs) * portion;
+        totals.sugar += toNumber(item.sugar) * portion;
+        totals.fiber += toNumber(item.fiber) * portion;
+        totals.salt += toNumber(item.salt) * portion;
+
+        const chip = document.createElement("div");
+        chip.className = "chip";
+
+        const label = document.createElement("span");
+        label.textContent = item.name + " (" + portion + "x)";
+        chip.appendChild(label);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          checkbox.checked = false;
+          if (portionSelect) portionSelect.value = "1";
+          calculateTotals();
+        });
+
+        chip.appendChild(remove);
+        selectedList.appendChild(chip);
+      });
+
+      emptyState.style.display = count ? "none" : "block";
+
+      const results = document.getElementById("results");
+      results.innerHTML = "";
+      METRICS.forEach(([key, label, unit]) => {
+        const box = document.createElement("div");
+        box.className = "metric";
+
+        const title = document.createElement("div");
+        title.className = "metric-label";
+        title.textContent = label;
+
+        const value = document.createElement("div");
+        value.className = "metric-value";
+        value.textContent = formatDE(totals[key]) + " " + unit;
+
+        box.appendChild(title);
+        box.appendChild(value);
+        results.appendChild(box);
+      });
+    }
+
+    function resetAll() {
+      document.querySelectorAll(".item-check").forEach((el) => el.checked = false);
+      document.querySelectorAll(".portion-select").forEach((el) => el.value = "1");
+      calculateTotals();
+    }
+
+    renderCategories();
+    calculateTotals();
+
+    document.getElementById("calcBtn").addEventListener("click", calculateTotals);
+    document.getElementById("resetBtn").addEventListener("click", resetAll);
+  </script>
+</body>
+</html>
